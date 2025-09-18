@@ -1,0 +1,280 @@
+openapi: 3.1.0
+info:
+  title: Angola Weather API
+  version: 1.0.0
+  description: |
+    API para consulta de clima e previsões meteorológicas em localidades de Angola.
+
+    Funcionalidades:
+    - Listagem de localidades (com paginação e filtros)
+    - Clima atual
+    - Previsão para os próximos 7 dias
+
+    Recursos:
+    - Cache Redis com TTLs diferentes para cada tipo de dado
+    - Dados obtidos de provedores meteorológicos confiáveis
+    - Suporte a unidades métricas e imperiais
+    - Paginação e filtros para listagem de localidades
+
+    **Formato de datas**:
+    - `date-time`: ISO 8601 com fuso horário (ex.: `2025-09-14T10:00:00Z`)
+    - `date`: ISO 8601 (ex.: `2025-09-14`)
+
+  contact:
+    name: Clima Angola API - Suporte
+    email: suporte@clima-angola.ao
+
+servers:
+  - url: https://api.clima-angola.ao/api/v1
+    description: Produção
+  - url: http://localhost:3000/api/v1
+    description: Desenvolvimento
+
+tags:
+  - name: Localities
+    description: Operações relacionadas a localidades de Angola
+  - name: Weather
+    description: Consultas de clima e previsões meteorológicas
+
+paths:
+  /localities:
+    get:
+      tags: [Localities]
+      summary: Listar localidades
+      description: Lista localidades de Angola com paginação e filtros opcionais.
+      operationId: listLocations
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/PageSizeParam'
+        - name: province
+          in: query
+          description: Filtra localidades por província
+          schema:
+            type: string
+        - name: name
+          in: query
+          description: Busca por nome parcial da localidade
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Lista paginada de localidades
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedLocations'
+        '400':
+          description: Parâmetros inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Erro interno do servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /localities/{id}:
+    get:
+      tags: [Localities]
+      summary: Buscar localidade por ID
+      operationId: getLocationById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Localidade encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Location'
+        '404':
+          description: Localidade não encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Erro interno do servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /weather/current/{id}:
+    get:
+      tags: [Weather]
+      summary: Clima atual por ID da localidade
+      operationId: getWeatherByLocationId
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - $ref: '#/components/parameters/UnitsParam'
+      responses:
+        '200':
+          description: Clima atual retornado com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Weather'
+        '404':
+          description: Localidade não encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Erro interno do servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /weather/forecast/{id}:
+    get:
+      tags: [Weather]
+      summary: Previsão para os próximos 7 dias
+      operationId: getForecast7d
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - $ref: '#/components/parameters/UnitsParam'
+      responses:
+        '200':
+          description: Previsão retornada com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Forecast7d'
+        '404':
+          description: Localidade não encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Erro interno do servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  parameters:
+    PageParam:
+      name: page
+      in: query
+      description: Número da página (paginação)
+      schema:
+        type: integer
+        default: 1
+    PageSizeParam:
+      name: limit
+      in: query
+      description: Quantidade de itens por página
+      schema:
+        type: integer
+        default: 10
+    UnitsParam:
+      name: units
+      in: query
+      description: Unidade de medida (metric ou imperial)
+      schema:
+        type: string
+        enum: [metric, imperial]
+
+  schemas:
+    Location:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 123
+        name:
+          type: string
+          example: "Talatona"
+        province:
+          type: string
+          example: "Luanda"
+    PaginatedLocations:
+      type: object
+      properties:
+        total:
+          type: integer
+          example: 150
+        page:
+          type: integer
+          example: 1
+        limit:
+          type: integer
+          example: 10
+        nextPage:
+          type: string
+          example: "/localities?page=2&limit=10"
+        prevPage:
+          type: string
+          example: null
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Location'
+    Weather:
+      type: object
+      properties:
+        temperature:
+          type: number
+          example: 28.5
+        description:
+          type: string
+          example: "Céu limpo"
+        wind:
+          type: number
+          example: 12
+        windDirection:
+          type: integer
+          example: 90
+        isDaytime:
+          type: boolean
+          example: true
+    Forecast7d:
+      type: object
+      properties:
+        days:
+          type: array
+          items:
+            type: object
+            properties:
+              date:
+                type: string
+                format: date
+                example: "2025-09-15"
+              minTemperature:
+                type: number
+                example: 22.0
+              maxTemperature:
+                type: number
+                example: 30.5
+              description:
+                type: string
+                example: "Parcialmente nublado"
+    Error:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        message:
+          type: string
+          example: "Localidade não encontrada"
