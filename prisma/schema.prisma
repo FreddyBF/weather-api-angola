@@ -10,19 +10,20 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
+
 model Location {
-  id        Int     @id @default(autoincrement())
-  name      String  @unique
-  slug      String @unique
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  slug      String   @unique
   province  String
   latitude  Float
   longitude Float
+  created   DateTime @default(now())
+  updated   DateTime @updatedAt
 
-  @@map("tb_Location")
+  @@map("tb_location")
 }
-
-
