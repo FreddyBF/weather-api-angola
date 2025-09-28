@@ -1,8 +1,9 @@
 export interface WeatherCurrentDTO {
-  cidade?: string;         // Nome da cidade (opcional)
+  localidade: string;         // Nome da cidade 
   temperatura: number;     // °C
-  vento: number;           // km/h
-  direcaoVento: number;    // graus
-  ehDia: boolean;          // true = dia, false = noite
+  sensacaoTermica: number;      
+  humidadeRelativa: number;   
   descricao: string;       // descrição em português do código WMO
 }
+
+

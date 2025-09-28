@@ -1,39 +1,35 @@
+import { LocationDto } from "../dtos/location.dto";
+import { NotFoundException } from "../errors/not-found.exception";
 import { ILocationRepository } from "../repositories/location/ILocation.repository";
-import { Location } from "@prisma/client";
-
-export class LocationService {
+class LocationService {
   constructor(private readonly repo: ILocationRepository) {}
 
-  async listLocations(
-    filter?: { provincia?: string },
-    pagination?: { page: number; limit: number }
-  ): Promise<{ total: number; page: number; limit: number; items: Location[] }> {
-    const page = pagination?.page ?? 1;
-    const limit = pagination?.limit;
-    const skip = limit ? (page - 1) * limit : undefined;
+  public async listLocations(
+    filter?: { provincia?: string }
+  ): Promise<LocationDto[]> {
+    
+    const locationEntity = await this.repo.list(filter);
+      const list = locationEntity.map((location) => {
+        return {
+          id: location.id,
+          nome: location.name,
+          slug: location.slug,
+          provincia: location.province,
+        }
+      });
+    return list;
+  }
 
-    const [items, total] = await Promise.all([
-      this.repo.list(filter, skip, limit),
-      this.repo.count(filter)
-    ]);
-
+  public async getLocationById(id: number): Promise<LocationDto> {
+    const location = await this.repo.getById(id);
+    if (!location) throw new NotFoundException(`Localidade com ID ${id} não encontrada`);
     return {
-      total,
-      page,
-      limit: limit ?? items.length,
-      items
+      id: location.id,
+      nome: location.name,
+      slug: location.slug,
+      provincia: location.province
     };
   }
-
-  async getLocationById(id: number): Promise<Location> {
-    const location = await this.repo.getById(id);
-    if (!location) throw new Error(`Localidade com ID ${id} não encontrada`);
-    return location;
-  }
-
-  async getLocationByName(nome: string): Promise<Location> {
-    const location = await this.repo.getByName(nome);
-    if (!location) throw new Error(`Localidade com nome "${nome}" não encontrada`);
-    return location;
-  }
 }
+
+export { LocationService }

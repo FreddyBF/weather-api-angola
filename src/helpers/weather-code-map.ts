@@ -28,14 +28,9 @@ const weatherCodeMap: Record<number, string> = {
   95: "Trovoada",
   96: "Trovoada com granizo fraco",
   99: "Trovoada com granizo forte"
-};
+}; 
+
+export { weatherCodeMap }
 
 
-/**
- * Retorna a descrição em português para um código WMO.
- * @param code Código WMO retornado pela API externa
- * @returns Descrição em português ou "Condição desconhecida"
- */
-export function getWeatherDescription(code: number): string {
-  return weatherCodeMap[code]!;
-}
+

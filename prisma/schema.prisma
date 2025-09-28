@@ -16,10 +16,13 @@ datasource db {
 
 model Location {
   id        Int     @id @default(autoincrement())
-  nome      String  @unique
-  provincia  String
+  name      String  @unique
+  slug      String @unique
+  province  String
   latitude  Float
   longitude Float
+
+  @@map("tb_Location")
 }
 
 

@@ -1,4 +1,4 @@
-import { Location } from "@prisma/client";
+import { LocationEntity } from "../../entities/Location.entity";
 
 export interface ILocationRepository {
   /**
@@ -9,29 +9,17 @@ export interface ILocationRepository {
    */
   list(
     filter?: { provincia?: string },
-    skip?: number,
-    take?: number
-  ): Promise<Location[]>;
-
-  /**
-   * Conta o total de localidades com filtro opcional por província
-   * @param filter Filtro opcional por província
-   */
-  count(filter?: { provincia?: string }): Promise<number>;
+  ): Promise<LocationEntity[]>;
 
   /**
    * Busca uma localidade pelo ID
    */
-  getById(id: number): Promise<Location | null>;
+  getById(id: number): Promise<LocationEntity | null>;
 
   /**
    * Busca uma localidade pelo nome
    */
-  getByName(nome: string): Promise<Location | null>;
+  getBySlug(slug: string): Promise<LocationEntity | null>;
 
-  /**
-   * Busca uma localidade por província e nome
-   */
-  getByProvinceAndName(provincia: string, nome: string): Promise<Location | null>;
 }
 

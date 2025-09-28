@@ -3,26 +3,18 @@ info:
   title: Angola Weather API
   version: 1.0.0
   description: |
-    API para consulta de clima e previsões meteorológicas em localidades de Angola.
+    API robusta para consulta de dados meteorológicos das principais localidades de Angola.
+    **Principais Funcionalidades:**
+    - **Clima Actual:** Obtenha as condições meteorológicas em tempo real para uma localidade específica.
+    - **Listagem de Localidades:** Explore as localidades disponíveis.
 
-    Funcionalidades:
-    - Listagem de localidades (com paginação e filtros)
-    - Clima atual
-    - Previsão para os próximos 7 dias
-
-    Recursos:
-    - Cache Redis com TTLs diferentes para cada tipo de dado
-    - Dados obtidos de provedores meteorológicos confiáveis
-    - Suporte a unidades métricas e imperiais
-    - Paginação e filtros para listagem de localidades
-
-    **Formato de datas**:
-    - `date-time`: ISO 8601 com fuso horário (ex.: `2025-09-14T10:00:00Z`)
-    - `date`: ISO 8601 (ex.: `2025-09-14`)
-
+    **Características Técnicas:**
+    - **Alto Desempenho:** Cache inteligente com Redis para garantir respostas de baixa latência.
+    - **Dados Confiáveis:** Informações meteorológicas fornecidas por provedores de alta precisão.
+    - **Flexibilidade:** Suporte a unidades de medida métricas (Celsius).
   contact:
     name: Clima Angola API - Suporte
-    email: suporte@clima-angola.ao
+    email: baptistaalfredo81@gmail.com
 
 servers:
   - url: https://api.clima-angola.ao/api/v1
@@ -31,34 +23,29 @@ servers:
     description: Desenvolvimento
 
 tags:
-  - name: Localities
-    description: Operações relacionadas a localidades de Angola
-  - name: Weather
-    description: Consultas de clima e previsões meteorológicas
+  - name: Localidades
+    description: Operações relacionadas às localidades de Angola
+  - name: Clima
+    description: Consulta das condições meteorológicas actuais para uma localidade
 
 paths:
-  /localities:
+  /localidade:
     get:
-      tags: [Localities]
+      tags: [Localidades]
       summary: Listar localidades
-      description: Lista localidades de Angola com paginação e filtros opcionais.
+      description: Lista localidades de Angola com filtros opcionais.
       operationId: listLocations
       parameters:
         - $ref: '#/components/parameters/PageParam'
         - $ref: '#/components/parameters/PageSizeParam'
-        - name: province
+        - name: provincia
           in: query
           description: Filtra localidades por província
           schema:
             type: string
-        - name: name
-          in: query
-          description: Busca por nome parcial da localidade
-          schema:
-            type: string
       responses:
         '200':
-          description: Lista paginada de localidades
+          description: Lista de localidades
           content:
             application/json:
               schema:
@@ -76,9 +63,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
 
-  /localities/{id}:
+  /localidade/{id}:
     get:
-      tags: [Localities]
+      tags: [Localidades]
       summary: Buscar localidade por ID
       operationId: getLocationById
       parameters:
@@ -107,94 +94,44 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
 
-  /weather/current/{id}:
+  /clima/{localidade}:
     get:
-      tags: [Weather]
-      summary: Clima atual por ID da localidade
+      tags: [Clima]
+      summary: Clima actual por nome da localidade
       operationId: getWeatherByLocationId
       parameters:
-        - name: id
+        - name: localidade
           in: path
           required: true
           schema:
-            type: integer
-        - $ref: '#/components/parameters/UnitsParam'
+            type: string
       responses:
         '200':
-          description: Clima atual retornado com sucesso
+          description: Clima actual retornado com sucesso
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Weather'
+                $ref: '#/components/schemas/ApiResponseWeather'
         '404':
           description: Localidade não encontrada
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/ApiResponseErro'
         '500':
           description: Erro interno do servidor
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
-
-  /weather/forecast/{id}:
-    get:
-      tags: [Weather]
-      summary: Previsão para os próximos 7 dias
-      operationId: getForecast7d
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-        - $ref: '#/components/parameters/UnitsParam'
-      responses:
-        '200':
-          description: Previsão retornada com sucesso
+                $ref: '#/components/schemas/ApiResponseErro'
+        '502':
+          description: Timeout ou falha na API externa
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Forecast7d'
-        '404':
-          description: Localidade não encontrada
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '500':
-          description: Erro interno do servidor
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/ApiResponseErro'
 
 components:
-  parameters:
-    PageParam:
-      name: page
-      in: query
-      description: Número da página (paginação)
-      schema:
-        type: integer
-        default: 1
-    PageSizeParam:
-      name: limit
-      in: query
-      description: Quantidade de itens por página
-      schema:
-        type: integer
-        default: 10
-    UnitsParam:
-      name: units
-      in: query
-      description: Unidade de medida (metric ou imperial)
-      schema:
-        type: string
-        enum: [metric, imperial]
-
   schemas:
     Location:
       type: object
@@ -205,76 +142,54 @@ components:
         name:
           type: string
           example: "Talatona"
-        province:
+        slug:
+          type: string
+          example: "talatona"
+        provincia:
           type: string
           example: "Luanda"
-    PaginatedLocations:
+
+    WeatherCurrent:
       type: object
       properties:
-        total:
+        temperatura:
+          type: number
+          format: float
+          example: 23.4
+        sensacaoTermica:
+          type: number
+          format: float
+          example: 22.1
+        humidadeRelativa:
           type: integer
-          example: 150
-        page:
-          type: integer
-          example: 1
-        limit:
-          type: integer
-          example: 10
-        nextPage:
+          example: 68
+        descricao:
           type: string
-          example: "/localities?page=2&limit=10"
-        prevPage:
-          type: string
-          example: null
-        items:
-          type: array
-          items:
-            $ref: '#/components/schemas/Location'
-    Weather:
+          example: "parcialmente nublado"
+
+    ApiResponseWeather:
       type: object
       properties:
-        temperature:
-          type: number
-          example: 28.5
-        description:
-          type: string
-          example: "Céu limpo"
-        wind:
-          type: number
-          example: 12
-        windDirection:
-          type: integer
-          example: 90
-        isDaytime:
+        sucesso:
           type: boolean
           example: true
-    Forecast7d:
+        mensagem:
+          type: string
+          example: "Clima actual obtido com sucesso"
+        dados:
+          $ref: '#/components/schemas/WeatherCurrent'
+
+    ApiResponseErro:
       type: object
       properties:
-        days:
-          type: array
-          items:
-            type: object
-            properties:
-              date:
-                type: string
-                format: date
-                example: "2025-09-15"
-              minTemperature:
-                type: number
-                example: 22.0
-              maxTemperature:
-                type: number
-                example: 30.5
-              description:
-                type: string
-                example: "Parcialmente nublado"
-    Error:
-      type: object
-      properties:
-        success:
+        sucesso:
           type: boolean
           example: false
-        message:
+        mensagem:
           type: string
-          example: "Localidade não encontrada"
+          example: "Erro na chamada à API de clima"
+        erros:
+          type: array
+          items:
+            type: string
+          example: ["timeout of 1000ms exceeded"]

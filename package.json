@@ -5,14 +5,14 @@
   "license": "MIT",
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
-    "build": "tsc",
+    "build": "tsc && mkdir dist\\docs && copy src\\docs\\sweeger.yaml dist\\docs\\sweeger.yaml",
     "start": "node dist/server.js",
     "start:prod": "yarn build && yarn prisma:generate && yarn prisma:migrate:deploy && yarn start",
     "prisma:generate": "prisma generate",
     "studio": "prisma studio",
     "prisma:migrate": "prisma migrate dev --name init",
     "prisma:migrate:deploy": "prisma migrate deploy",
-    "prisma:seed": "ts-node prisma/seed.ts"
+    "prisma:seed": "ts-node src/helpers/seed.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.16.1",

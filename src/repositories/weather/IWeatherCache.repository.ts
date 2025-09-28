@@ -1,25 +1,13 @@
-import { WeatherCurrent } from "../../entities/WeatherCurrent.entity";
-import { WeatherDailyForecast } from "../../entities/WeatherDailyForecast.entity";
-
+import { CurrentWeather } from "../../entities/WeatherCurrent.entity";
 
 export interface IWeatherCacheRepository {
   /**
    * Busca clima atual no cache
    */
-  getCurrent(latitude: number, longitude: number): Promise<WeatherCurrent | null>;
+  getCurrent(latitude: number, longitude: number): Promise<CurrentWeather | null>;
 
   /**
-   * Salva clima atual no cache
+   * Salva clima actual no cache
    */
-  setCurrent(latitude: number, longitude: number, value: WeatherCurrent): Promise<void>;
-
-  /**
-   * Busca previsão de 7 dias no cache
-   */
-  getForecast7d(latitude: number, longitude: number): Promise<WeatherDailyForecast[] | null>;
-
-  /**
-   * Salva previsão de 7 dias no cache
-   */
-  setForecast7d(latitude: number, longitude: number, value: WeatherDailyForecast[]): Promise<void>;
+  setCurrent(latitude: number, longitude: number, value: CurrentWeather): Promise<void>;
 }
